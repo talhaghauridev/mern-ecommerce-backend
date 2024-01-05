@@ -3,7 +3,6 @@ const Order = require("../models/orderModal");
 const Product = require("../models/productModel");
 const ErrorHandler = require("../utils/errorhandler");
 
-
 // Create Order
 const createOrder = catchAsyncError(async (req, res, next) => {
   try {
@@ -37,8 +36,8 @@ const createOrder = catchAsyncError(async (req, res, next) => {
       city: shippingInfo.city,
       state: shippingInfo.state,
       country: shippingInfo.country,
-      pinCode: shippingInfo.pinCode ,
-      phoneNo: shippingInfo.phoneNo, 
+      pinCode: shippingInfo.pinCode,
+      phoneNo: shippingInfo.phoneNo,
     };
 
     // Extracting orderItems details
@@ -60,7 +59,7 @@ const createOrder = catchAsyncError(async (req, res, next) => {
       : null;
 
     // Create order using extracted data
-    const order = new Order({
+    const order = await Order.create({
       shippingInfo: extractedShippingInfo,
       orderItems: extractedOrderItems,
       paymentInfo: extractedPaymentInfo,
@@ -71,7 +70,6 @@ const createOrder = catchAsyncError(async (req, res, next) => {
       paidAt: Date.now(),
       user: req.user._id,
     });
-    await order.save();
 
     res.status(200).json({ success: true, order });
   } catch (error) {
@@ -104,7 +102,6 @@ const getSingleOrder = catchAsyncError(async (req, res, next) => {
   });
 });
 
-
 //Get All Orders --Admin
 
 const getAllOrders = catchAsyncError(async (req, res, next) => {
@@ -118,6 +115,7 @@ const getAllOrders = catchAsyncError(async (req, res, next) => {
     success: true,
     totalAmount,
     orders,
+    length: orders?.length,
   });
 });
 
@@ -144,6 +142,7 @@ const updateOrder = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message:"Order updated successfully"
   });
 });
 
@@ -163,12 +162,15 @@ const deleteOrder = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: `Order deleted successfully`,
   });
 });
 
 module.exports = {
   createOrder,
-  myOrders,getSingleOrder,
-  getAllOrders,updateOrder,deleteOrder
-
-}
+  myOrders,
+  getSingleOrder,
+  getAllOrders,
+  updateOrder,
+  deleteOrder,
+};
