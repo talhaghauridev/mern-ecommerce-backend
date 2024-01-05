@@ -120,7 +120,12 @@ const getAllOrders = catchAsyncError(async (req, res, next) => {
 });
 
 // Update Order Status --Admin
-
+async function updateStock(id, quantity) {
+  const product = await Product.findById(id);
+  product.stock -= quantity;
+  await product.save({ validateBeforeSave: false });
+  console.log(product);
+}
 const updateOrder = catchAsyncError(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
   if (!order) {
@@ -134,7 +139,7 @@ const updateOrder = catchAsyncError(async (req, res, next) => {
     await updateStock(o.product, o.quantity);
   });
   order.orderStatus = req.body.status;
-  if (req.body.status === "Develivered") {
+  if (req.body.status === "Delivered") {
     order.deliveredAt = Date.now();
   }
 
@@ -146,11 +151,7 @@ const updateOrder = catchAsyncError(async (req, res, next) => {
   });
 });
 
-async function updateStock(id, quantity) {
-  const product = await Product.findById(id);
-  product.stock -= quantity;
-  await product.save({ validateBeforeSave: false });
-}
+
 
 //Delete Order --Admin
 const deleteOrder = catchAsyncError(async (req, res, next) => {
