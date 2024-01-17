@@ -5,7 +5,7 @@ const sendToken = require("../utils/jwttoken");
 const cloudinary = require("cloudinary");
 const { sendEmail } = require("../utils/sendEmail");
 const crypto = require("crypto");
-const { uploadUpdateCloudinary } = require("../utils/cloudinary");
+const { uploadUpdateCloudinary, uploadCloudinary } = require("../utils/cloudinary");
 
 // Register a User
 
@@ -21,15 +21,15 @@ const registerUser = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("User is already exist in this email", 401));
   }
 
-  // const response = await uploadCloudinary(avatar, "avatars");
+  const response = await uploadCloudinary(avatar, "avatars");
 
   const user = await User.create({
     name,
     email,
     password,
     avatar: {
-      public_id: "response?.public_id",
-      url: "response?.secure_url",
+      public_id: response?.public_id,
+      url: response?.secure_url,
     },
   });
 
