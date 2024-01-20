@@ -1,0 +1,12 @@
+{
+    "version": 2,
+    "functions": {
+      "src/**/*.js": {
+        "runtime": "nodejs14.x"
+      }
+    },
+    "routes": [
+      { "src": "/(.*)", "dest": "/$1" }
+    ]
+  }
+  

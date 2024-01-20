@@ -5,12 +5,15 @@ const sendToken = require("../utils/jwttoken");
 const cloudinary = require("cloudinary");
 const { sendEmail } = require("../utils/sendEmail");
 const crypto = require("crypto");
-const { uploadUpdateCloudinary, uploadCloudinary } = require("../utils/cloudinary");
+const {
+  uploadUpdateCloudinary,
+  uploadCloudinary,
+} = require("../utils/cloudinary");
 
 // Register a User
 
 const registerUser = catchAsyncError(async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, avatar } = req.body;
 
   if (!(name || email || password)) {
     return next(new ErrorHandler("Please fill all fields", 400));
@@ -102,7 +105,7 @@ const forgotPassword = catchAsyncError(async (req, res, next) => {
 
   await user.save({ validateBeforeSave: false });
 
-  const resetPasswordUrl = `${process.env.FRONTEND_URL}/password/reset/${resetToken}`;
+  const resetPasswordUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
   const message = `Your Password reset token is : \n\n  ${resetPasswordUrl} \n\n if you have not requested tjis email then, please ignore it`;
 
   try {
@@ -128,6 +131,7 @@ const forgotPassword = catchAsyncError(async (req, res, next) => {
 const resetPassword = catchAsyncError(async (req, res, next) => {
   const { password, confirmPassword } = req.body;
   const { token } = req.params;
+  console.log(password, confirmPassword, token);
   const resetPasswordToken = crypto
     .createHash("sha256")
     .update(token)
@@ -139,7 +143,8 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
       resetPasswordToken,
       resetPasswordExpire: { $gt: Date.now() },
     });
-
+    
+    console.log(user);
     if (!user) {
       return next(
         new ErrorHandler("Reset Password Token is invalid or has expired", 400)
@@ -161,9 +166,12 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
     // Send a response indicating success
     res.status(200).json({
       success: true,
+      message: "Reset Password successfully",
       user: user,
     });
   } catch (error) {
+    console.log(error);
+
     // If an error occurs, also clear the reset token fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;

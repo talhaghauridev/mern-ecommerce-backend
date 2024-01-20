@@ -62,7 +62,7 @@ const getAllProducts = catchAsyncError(async (req, res) => {
 
   let products = await apifeature.query;
 
-  const filteredProductCount = products.length;
+  const filteredProductCount = products?.length;
   apifeature.pagination(resultPerPage);
 
   // products = await apifeature.query;
