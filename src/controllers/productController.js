@@ -56,16 +56,16 @@ const deleteProduct = catchAsyncError(async (req, res, next) => {
 const getAllProducts = catchAsyncError(async (req, res) => {
   const resultPerPage = 8;
   const productCount = await Product.countDocuments();
+  
   const apifeature = new ApiFeature(Product.find(), req.query)
     .search()
-    .filter();
+    .filter()
+    .pagination(resultPerPage); // Adjust pagination here
 
   let products = await apifeature.query;
 
-  const filteredProductCount = products?.length;
-  apifeature.pagination(resultPerPage);
+  const filteredProductCount = products.length;
 
-  // products = await apifeature.query;
   res.status(200).json({
     message: "Route is working fine",
     products,
@@ -74,6 +74,7 @@ const getAllProducts = catchAsyncError(async (req, res) => {
     filteredProductCount,
   });
 });
+
 
 //Get Product Detial
 
