@@ -143,7 +143,7 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
       resetPasswordToken,
       resetPasswordExpire: { $gt: Date.now() },
     });
-    
+
     console.log(user);
     if (!user) {
       return next(
@@ -228,23 +228,35 @@ const updateUserPassword = catchAsyncError(async (req, res, next) => {
 
 const updateProfile = catchAsyncError(async (req, res, next) => {
   const { name, email, avatar } = req.body;
-  if (!(name || email)) {
-    return next(new ErrorHandler("Please fill all field ", 400));
+
+  if (!name && !email) {
+    return next(
+      new ErrorHandler("Please fill at least one field (name or email)", 400)
+    );
   }
 
-  // const response = await uploadUpdateCloudinary(
-  //   req.user?.avatar?.public_id,
-  //   avatar
-  // );
+  console.log(avatar, req.user?.avatar?.url);
 
   const newUserData = {
     name,
     email,
-    avatar: {
-      public_id: " response?.public_id",
-      url: "response?.secure_url",
-    },
   };
+
+  if (avatar && avatar !== req.user?.avatar?.url) {
+    console.log("Hello");
+
+    const response = await uploadUpdateCloudinary(
+      req.user?.avatar?.public_id,
+      avatar,
+      "avatars"
+    );
+
+    newUserData.avatar = {
+      public_id: response?.public_id,
+      url: response?.secure_url,
+    };
+  }
+
 
   const user = await User.findByIdAndUpdate(req.user._id, newUserData, {
     new: true,
