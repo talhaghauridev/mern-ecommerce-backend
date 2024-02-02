@@ -105,7 +105,7 @@ const forgotPassword = catchAsyncError(async (req, res, next) => {
 
   await user.save({ validateBeforeSave: false });
 
-  const resetPasswordUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  const resetPasswordUrl = `${process.env.FRONTEND_URL}/password/reset/${resetToken}`;
   const message = `Your Password reset token is : \n\n  ${resetPasswordUrl} \n\n if you have not requested tjis email then, please ignore it`;
 
   try {
