@@ -64,6 +64,10 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
+      createdAt: {
+        type: Date, // Add a field for creation date
+        default: Date.now, // Default value is the current date/time
+      },
     },
   ],
   user: {
