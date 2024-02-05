@@ -2,12 +2,21 @@ const catchAsyncError = require("../utils/catchAsyncError");
 const Product = require("../models/productModel");
 const ErrorHandler = require("../utils/errorhandler");
 const ApiFeature = require("../utils/apiFeature");
-const { default: mongoose } = require("mongoose");
-
+const { uploadCloudinary } = require("../utils/cloudinary");
 // Create Product -- Admin
 
 const createProduct = catchAsyncError(async (req, res, next) => {
   req.body.user = req.user.id;
+  let images = [];
+
+  if (req.body.images && req.body.images.length > 0) {
+    for (const image of req.body.images) {
+      const uploadedImage = await uploadCloudinary(image, "products");
+      images.push(uploadedImage);
+    }
+  }
+  req.body.images = images;
+
   const product = await Product.create(req.body);
   res.status(200).json({
     success: true,
@@ -56,7 +65,7 @@ const deleteProduct = catchAsyncError(async (req, res, next) => {
 const getAllProducts = catchAsyncError(async (req, res) => {
   const resultPerPage = 8;
   const productCount = await Product.countDocuments();
-  
+
   const apifeature = new ApiFeature(Product.find(), req.query)
     .search()
     .filter()
@@ -74,7 +83,6 @@ const getAllProducts = catchAsyncError(async (req, res) => {
     filteredProductCount,
   });
 });
-
 
 //Get Product Detial
 
@@ -195,7 +203,7 @@ const deleteReview = catchAsyncError(async (req, res, next) => {
   console.log(reviews);
   res.status(200).json({
     success: true,
-    reviews
+    reviews,
   });
 });
 
