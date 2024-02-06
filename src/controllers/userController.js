@@ -5,6 +5,7 @@ const sendToken = require("../utils/jwttoken");
 const cloudinary = require("cloudinary");
 const { sendEmail } = require("../utils/sendEmail");
 const crypto = require("crypto");
+const Product = require ("../models/productModel")
 const {
   uploadUpdateCloudinary,
   uploadCloudinary,
@@ -257,6 +258,10 @@ const updateProfile = catchAsyncError(async (req, res, next) => {
     };
   }
 
+  await Product.updateMany(
+    { "reviews.user": req.user._id },
+    { $set: { "reviews.$.name": newUserData.name } }
+  );
 
   const user = await User.findByIdAndUpdate(req.user._id, newUserData, {
     new: true,

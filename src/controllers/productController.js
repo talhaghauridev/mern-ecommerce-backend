@@ -9,14 +9,18 @@ const createProduct = catchAsyncError(async (req, res, next) => {
   req.body.user = req.user.id;
   let images = [];
 
+  console.log("req.body.images", req.body.images);
   if (req.body.images && req.body.images.length > 0) {
     for (const image of req.body.images) {
       const uploadedImage = await uploadCloudinary(image, "products");
-      images.push(uploadedImage);
+      images.push({
+        public_Id: uploadedImage.public_id,
+        url: uploadedImage.secure_url,
+      });
     }
   }
   req.body.images = images;
-
+  console.log("Upload Images", images);
   const product = await Product.create(req.body);
   res.status(200).json({
     success: true,
@@ -87,8 +91,9 @@ const getAllProducts = catchAsyncError(async (req, res) => {
 //Get Product Detial
 
 const getProductDetial = catchAsyncError(async (req, res, next) => {
-  const id = req.params.id;
-  const product = await Product.findById(req.params.id);
+  const productId = req.params.id;
+  const product = await Product.findById(productId);
+
   if (!product) {
     return next(new ErrorHandler("Product not found", 404));
   }
