@@ -27,7 +27,7 @@ router
 router.route("/review").put(isAuthenticationUser, productReview);
 
 router
-  .route("admim/products")
+  .route("/admin/products")
   .get(isAuthenticationUser, authorizeRoles("admin"), getAdminProducts);
 router
   .route("/review")

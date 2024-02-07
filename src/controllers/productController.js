@@ -66,7 +66,7 @@ const deleteProduct = catchAsyncError(async (req, res, next) => {
 
 
 const getAdminProducts = catchAsyncError(async (req, res) => {
- const products =Product.find();
+ const products = await Product.find({});
   res.status(200).json({
    success:true,
    products
