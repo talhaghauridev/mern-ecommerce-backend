@@ -64,6 +64,17 @@ const deleteProduct = catchAsyncError(async (req, res, next) => {
   });
 });
 
+
+const getAdminProducts = catchAsyncError(async (req, res) => {
+ const products =Product.find();
+  res.status(200).json({
+   success:true,
+   products
+  });
+});
+
+
+
 // Get All Product
 
 const getAllProducts = catchAsyncError(async (req, res) => {
@@ -167,18 +178,6 @@ const deleteReview = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Product not found", 404));
   }
 
-  // const productS = await Product.findByIdAndUpdate(
-  //   req.query.productId,
-  //   {
-  //     $pull: {
-  //       reviews: { _id: req.query._id },
-  //     },
-  //   },
-  //   {
-  //     new: true,
-  //   }
-  // );
-
   const reviews = product.reviews.filter((rev) => {
     rev._id.toString() !== req.query._id.toString();
   });
@@ -221,4 +220,5 @@ module.exports = {
   productReview,
   getProductReviews,
   deleteReview,
+  getAdminProducts
 };
