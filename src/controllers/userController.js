@@ -236,7 +236,6 @@ const updateProfile = catchAsyncError(async (req, res, next) => {
     );
   }
 
-  console.log(avatar, req.user?.avatar?.url);
 
   const newUserData = {
     name,

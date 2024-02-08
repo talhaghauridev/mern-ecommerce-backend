@@ -3,6 +3,8 @@ const Product = require("../models/productModel");
 const ErrorHandler = require("../utils/errorhandler");
 const ApiFeature = require("../utils/apiFeature");
 const { uploadCloudinary } = require("../utils/cloudinary");
+const { v2 } = require("cloudinary");
+
 // Create Product -- Admin
 
 const createProduct = catchAsyncError(async (req, res, next) => {
@@ -56,6 +58,10 @@ const deleteProduct = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Product not found", 404));
   }
 
+  for (const image of product.images) {
+    await v2.uploader.destroy(image.public_Id);
+  }
+
   await Product.findByIdAndDelete(id);
 
   return res.status(200).json({
@@ -64,16 +70,13 @@ const deleteProduct = catchAsyncError(async (req, res, next) => {
   });
 });
 
-
 const getAdminProducts = catchAsyncError(async (req, res) => {
- const products = await Product.find({});
+  const products = await Product.find({});
   res.status(200).json({
-   success:true,
-   products
+    success: true,
+    products,
   });
 });
-
-
 
 // Get All Product
 
@@ -220,5 +223,5 @@ module.exports = {
   productReview,
   getProductReviews,
   deleteReview,
-  getAdminProducts
+  getAdminProducts,
 };
