@@ -2,7 +2,10 @@ const catchAsyncError = require("../utils/catchAsyncError");
 const Product = require("../models/productModel");
 const ErrorHandler = require("../utils/errorhandler");
 const ApiFeature = require("../utils/apiFeature");
-const { uploadCloudinary } = require("../utils/cloudinary");
+const {
+  uploadCloudinary,
+  uploadUpdateCloudinary,
+} = require("../utils/cloudinary");
 const { v2 } = require("cloudinary");
 
 // Create Product -- Admin
@@ -31,21 +34,46 @@ const createProduct = catchAsyncError(async (req, res, next) => {
 });
 
 // Update Product --Admin
-
 const updateProduct = catchAsyncError(async (req, res, next) => {
   const product = await Product.findById(req.params.id);
   if (!product) {
     return next(new ErrorHandler("Product not found", 404));
   }
-  await Product.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: false,
-  });
-  res.status(200).json({
-    success: true,
-    message: "Product update successfully ",
-  });
+  const existingImages = req.body.images.filter((newImage) =>
+    product.images.includes(newImage)
+  );
+  console.log(existingImages);
+
+  let images = [];
+  // Use a try-catch block for better error handling
+  try {
+    if (existingImages) {
+      for (const image of existingImages) {
+        const uploadedImage = await uploadCloudinary(image, "products");
+        images.push({
+          public_Id: uploadedImage.public_id,
+          url: uploadedImage.secure_url,
+        });
+      }
+    }
+
+    req.body.images = [...product.images, ...images];
+
+    await Product.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Product update successfully",
+    });
+  } catch (error) {
+    console.error("Error uploading images to Cloudinary:", error);
+    // Handle the error appropriately, you might want to return an error response
+    next(new ErrorHandler("Error updating product", 500));
+  }
 });
 
 // Delete Product -- Admin
