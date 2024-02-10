@@ -5,7 +5,7 @@ const sendToken = require("../utils/jwttoken");
 const cloudinary = require("cloudinary");
 const { sendEmail } = require("../utils/sendEmail");
 const crypto = require("crypto");
-const Product = require ("../models/productModel")
+const Product = require("../models/productModel");
 const {
   uploadUpdateCloudinary,
   uploadCloudinary,
@@ -236,7 +236,6 @@ const updateProfile = catchAsyncError(async (req, res, next) => {
     );
   }
 
-
   const newUserData = {
     name,
     email,
@@ -302,6 +301,7 @@ const getSingleUser = catchAsyncError(async (req, res, next) => {
 
 const updateUserRole = catchAsyncError(async (req, res, next) => {
   const { name, email, role } = req.body;
+  console.log(req.body);
   const newUserData = {
     name: name,
     email: email,
@@ -319,7 +319,7 @@ const updateUserRole = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    user,
+    message:"User Updated successfully",
   });
 });
 
@@ -333,6 +333,8 @@ const deleteUser = catchAsyncError(async (req, res, next) => {
       new ErrorHandler(`User cannot exist with id: ${req.params.id}`, 400)
     );
   }
+
+  await cloudinary.v2.uploader.destroy(user?.avatar?.public_id);
 
   await User.findByIdAndDelete(user?._id);
 

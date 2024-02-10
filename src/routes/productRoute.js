@@ -29,9 +29,10 @@ router.route("/review").put(isAuthenticationUser, productReview);
 router
   .route("/admin/products")
   .get(isAuthenticationUser, authorizeRoles("admin"), getAdminProducts);
+
 router
-  .route("/review")
-  .get(getProductReviews)
-  .patch(isAuthenticationUser, deleteReview);
+  .route("/reviews")
+  .get(isAuthenticationUser,authorizeRoles("admin"),getProductReviews)
+  .patch(isAuthenticationUser,authorizeRoles("admin"), deleteReview);
 
 module.exports = router;
