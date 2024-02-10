@@ -1,7 +1,7 @@
-const app = require("./app");
+const app = require("./src/app");
 const dotenv = require("dotenv");
 const cloudinary = require("cloudinary");
-const connectDB = require("./db/index");
+const connectDB = require("./src/db/index");
 const bodyParser = require("body-parser");
 const PORT = process.env.PORT || 5000;
 //Confing
