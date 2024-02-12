@@ -1,12 +1,50 @@
 const catchAsyncError = require("../utils/catchAsyncError");
+const { ApiFeature } = require("../utils/apiFeature");
 const Product = require("../models/productModel");
 const ErrorHandler = require("../utils/errorhandler");
-const ApiFeature = require("../utils/apiFeature");
-const {
-  uploadCloudinary,
-  uploadUpdateCloudinary,
-} = require("../utils/cloudinary");
+const {uploadCloudinary} = require("../utils/cloudinary");
 const { v2 } = require("cloudinary");
+
+
+// Get All Product
+
+const getAllProducts = catchAsyncError(async (req, res) => {
+  const resultPerPage = 8;
+  const productCount = await Product.countDocuments();
+
+  const apifeature = new ApiFeature(Product.find(), req.query)
+    .search()
+    .filter()
+    .pagination(resultPerPage);
+  let products = await apifeature.query;
+
+  const filteredProductCount = products.length;
+
+  res.status(200).json({
+    message: "Route is working fine",
+    products,
+    productCount,
+    resultPerPage,
+    filteredProductCount,
+  });
+});
+
+
+//Get Product Detial
+
+const getProductDetial = catchAsyncError(async (req, res, next) => {
+  const productId = req.params.id;
+  const product = await Product.findById(productId);
+
+  if (!product) {
+    return next(new ErrorHandler("Product not found", 404));
+  }
+  res.status(200).json({
+    success: true,
+    product,
+  });
+});
+
 
 // Create Product -- Admin
 
@@ -34,6 +72,7 @@ const createProduct = catchAsyncError(async (req, res, next) => {
 });
 
 // Update Product --Admin
+
 const updateProduct = catchAsyncError(async (req, res, next) => {
   const product = await Product.findById(req.params.id);
   if (!product) {
@@ -42,10 +81,8 @@ const updateProduct = catchAsyncError(async (req, res, next) => {
   const existingImages = req.body.images.filter((newImage) =>
     product.images.includes(newImage)
   );
-  console.log(existingImages);
 
   let images = [];
-  // Use a try-catch block for better error handling
   try {
     if (existingImages) {
       for (const image of existingImages) {
@@ -71,7 +108,6 @@ const updateProduct = catchAsyncError(async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error uploading images to Cloudinary:", error);
-    // Handle the error appropriately, you might want to return an error response
     next(new ErrorHandler("Error updating product", 500));
   }
 });
@@ -98,6 +134,8 @@ const deleteProduct = catchAsyncError(async (req, res, next) => {
   });
 });
 
+//Get Admin Products -- Admin
+
 const getAdminProducts = catchAsyncError(async (req, res) => {
   const products = await Product.find({});
   res.status(200).json({
@@ -106,44 +144,6 @@ const getAdminProducts = catchAsyncError(async (req, res) => {
   });
 });
 
-// Get All Product
-
-const getAllProducts = catchAsyncError(async (req, res) => {
-  const resultPerPage = 8;
-  const productCount = await Product.countDocuments();
-
-  const apifeature = new ApiFeature(Product.find(), req.query)
-    .search()
-    .filter()
-    .pagination(resultPerPage); // Adjust pagination here
-
-  let products = await apifeature.query;
-
-  const filteredProductCount = products.length;
-
-  res.status(200).json({
-    message: "Route is working fine",
-    products,
-    productCount,
-    resultPerPage,
-    filteredProductCount,
-  });
-});
-
-//Get Product Detial
-
-const getProductDetial = catchAsyncError(async (req, res, next) => {
-  const productId = req.params.id;
-  const product = await Product.findById(productId);
-
-  if (!product) {
-    return next(new ErrorHandler("Product not found", 404));
-  }
-  res.status(200).json({
-    success: true,
-    product,
-  });
-});
 
 //Create new Review and Update the Review
 
@@ -186,7 +186,7 @@ const productReview = catchAsyncError(async (req, res, next) => {
   });
 });
 
-//Get All Reviews of the Product
+//Get All Reviews of the Product -- Admin
 
 const getProductReviews = catchAsyncError(async (req, res, next) => {
   const product = await Product.findById(req.query.productId);
@@ -199,7 +199,7 @@ const getProductReviews = catchAsyncError(async (req, res, next) => {
   });
 });
 
-//Delete Review
+//Delete Review -- Admin
 
 const deleteReview = catchAsyncError(async (req, res, next) => {
   const product = await Product.findById(req.query.productId);
@@ -211,7 +211,6 @@ const deleteReview = catchAsyncError(async (req, res, next) => {
   const reviews = product.reviews.filter((rev) => {
     return rev._id.toString() !== req.query._id.toString();
   });
-  console.log(reviews);
   let avg = 0;
   reviews.forEach((rev) => {
     avg += rev.rating;
@@ -240,7 +239,6 @@ const deleteReview = catchAsyncError(async (req, res, next) => {
     }
   );
 
-  console.log(reviews);
   res.status(200).json({
     success: true,
     reviews,

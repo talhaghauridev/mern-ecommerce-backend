@@ -16,7 +16,7 @@ const {
 const registerUser = catchAsyncError(async (req, res, next) => {
   const { name, email, password, avatar } = req.body;
 
-  if (!(name || email || password)) {
+  if (!name || !email || !password) {
     return next(new ErrorHandler("Please fill all fields", 400));
   }
 
@@ -53,9 +53,10 @@ const registerUser = catchAsyncError(async (req, res, next) => {
 });
 
 // Login User
+
 const loginUser = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
-  if (!(email || password)) {
+  if (!email || !password) {
     return next(new ErrorHandler("Please Enter Email & Password", 400));
   }
   const user = await User.findOne({ email }).select("+password");
@@ -81,6 +82,7 @@ const loginUser = catchAsyncError(async (req, res, next) => {
 });
 
 // Logout User
+
 const logoutUser = catchAsyncError(async (req, res, next) => {
   res.status(200).json({
     success: true,
@@ -89,6 +91,7 @@ const logoutUser = catchAsyncError(async (req, res, next) => {
 });
 
 //Forgot Password
+
 const forgotPassword = catchAsyncError(async (req, res, next) => {
   const { email } = req.body;
 
@@ -132,7 +135,7 @@ const forgotPassword = catchAsyncError(async (req, res, next) => {
 const resetPassword = catchAsyncError(async (req, res, next) => {
   const { password, confirmPassword } = req.body;
   const { token } = req.params;
-  console.log(password, confirmPassword, token);
+
   const resetPasswordToken = crypto
     .createHash("sha256")
     .update(token)
@@ -145,7 +148,6 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
       resetPasswordExpire: { $gt: Date.now() },
     });
 
-    console.log(user);
     if (!user) {
       return next(
         new ErrorHandler("Reset Password Token is invalid or has expired", 400)
@@ -155,16 +157,11 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
     if (password !== confirmPassword) {
       return next(new ErrorHandler("Passwords do not match", 400));
     }
-
-    // Update the user's password and clear reset token fields
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
-    // Save the user with the updated password and fields
     await user.save({ validateBeforeSave: false });
-
-    // Send a response indicating success
     res.status(200).json({
       success: true,
       message: "Reset Password successfully",
@@ -172,15 +169,12 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-
-    // If an error occurs, also clear the reset token fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save({
       validateBeforeSave: false,
     });
 
-    // Pass the error to the error handling middleware
     return next(new ErrorHandler(error, 400));
   }
 });
@@ -242,8 +236,6 @@ const updateProfile = catchAsyncError(async (req, res, next) => {
   };
 
   if (avatar && avatar !== req.user?.avatar?.url) {
-    console.log("Hello");
-
     const response = await uploadUpdateCloudinary(
       req.user?.avatar?.public_id,
       avatar,
@@ -301,7 +293,7 @@ const getSingleUser = catchAsyncError(async (req, res, next) => {
 
 const updateUserRole = catchAsyncError(async (req, res, next) => {
   const { name, email, role } = req.body;
-  console.log(req.body);
+
   const newUserData = {
     name: name,
     email: email,
@@ -319,7 +311,7 @@ const updateUserRole = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message:"User Updated successfully",
+    message: "User Updated successfully",
   });
 });
 

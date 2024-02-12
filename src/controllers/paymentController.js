@@ -27,7 +27,6 @@ const checkPayment = catchAsyncError(async (req, res, next) => {
       success_url: `${process.env.FRONTEND_URL}/order/success`,
       cancel_url: `${process.env.FRONTEND_URL}/cart`,
     });
-console.log(session);
 
     res.status(200).json({
       success: true,
