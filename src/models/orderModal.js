@@ -18,16 +18,15 @@ const orderItemSchema = new Schema({
   product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
 });
 
-const paymentInfoSchema = new Schema({
-  id: { type: String, required: true },
-  status: { type: String, required: true },
-});
 
 const orderSchema = new Schema({
   shippingInfo: addressSchema,
   orderItems: [orderItemSchema],
-  user: { type: Schema.ObjectId, ref: "User", required: true },
-  paymentInfo: paymentInfoSchema,
+  user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  paymentInfo: {
+    id: { type: String, required: true },
+    status: { type: String, required: true },
+  },
   paidAt: { type: Date, required: true },
   itemsPrice: { type: Number, required: true, default: 0 },
   taxPrice: { type: Number, required: true, default: 0 },

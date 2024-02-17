@@ -3,85 +3,53 @@ const Order = require("../models/orderModal");
 const Product = require("../models/productModel");
 const ErrorHandler = require("../utils/errorhandler");
 
-// Create Order
-const createOrder = catchAsyncError(async (req, res, next) => {
+const createOrder = async (customer, data) => {
+  const Items = JSON.parse(customer.metadata.cart);
+  const shippingInfo = JSON.parse(customer.metadata.shippingInfo);
+
+  console.log("Cart Items", Items);
+  console.log("shippingInfo Items", shippingInfo);
+
+  const orderItems = Items?.map((item) => ({
+    product: item._id,
+    name: item.name,
+    price: item.price,
+    image:
+      item.images[0]?.url ||
+      "https://res.cloudinary.com/datkbb6pe/image/upload/v1698064367/avatar/bk7uohfge0ahhlwyzto6.png",
+    stock: item.stock,
+    quantity: item.quantity || 1,
+  }));
+
   try {
-    const {
-      shippingInfo,
-      orderItems,
-      paymentInfo,
-      itemsPrice,
-      taxPrice,
-      shippingPrice,
-      totalPrice,
-    } = req.body;
-    // Validate required fields
-
-    if (
-      !(shippingInfo,
-      orderItems,
-      paymentInfo,
-      itemsPrice,
-      taxPrice,
-      shippingPrice,
-      totalPrice)
-    ) {
-      return next(new ErrorHandler("Please fill all fields", 400));
-    }
-    const requiredFields = ["address", "city", "state", "country"];
-
-    // Extracting shippingInfo details
-    const extractedShippingInfo = {
-      address: shippingInfo.address,
-      city: shippingInfo.city,
-      state: shippingInfo.state,
-      country: shippingInfo.country,
-      pinCode: shippingInfo.pinCode,
-      phoneNo: shippingInfo.phoneNo,
-    };
-
-    // Extracting orderItems details
-    const extractedOrderItems = orderItems?.map((item) => ({
-      product: item.product,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-      stock: item.stock,
-      quantity: item.quanity || 1,
-    }));
-
-    // Extracting paymentInfo details
-    const extractedPaymentInfo = paymentInfo
-      ? {
-          id: paymentInfo.id || "",
-          status: paymentInfo.status || "",
-        }
-      : null;
-
-    // Create order using extracted data
     const order = await Order.create({
-      shippingInfo: extractedShippingInfo,
-      orderItems: extractedOrderItems,
-      paymentInfo: extractedPaymentInfo,
-      itemsPrice,
-      taxPrice,
-      shippingPrice,
-      totalPrice,
-      paidAt: Date.now(),
-      user: req.user._id,
+      shippingInfo: {
+        ...shippingInfo,
+        phoneNo: shippingInfo.phoneNumber,
+      },
+      orderItems: orderItems,
+      itemsPrice: data.amount_subtotal,
+      taxPrice: 10,
+      shippingPrice: data.amount_total,
+      totalPrice: data.amount_total,
+      paidAt: new Date(),
+      user: customer.metadata.userId,
+      paymentInfo: {
+        id: data.payment_intent,
+        status: data.payment_status,
+      },
+      orderStatus: "Processing",
     });
-
-    res.status(200).json({ success: true, order });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.log(error);
   }
-});
+};
 
 // Get My Orders
 
 const myOrders = catchAsyncError(async (req, res, next) => {
   const orders = await Order.find({ user: req.user._id });
+  console.log(orders);
   res.status(201).json({
     success: true,
     orders,
@@ -147,7 +115,7 @@ const updateOrder = catchAsyncError(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message:"Order updated successfully"
+    message: "Order updated successfully",
   });
 });
 
@@ -167,10 +135,10 @@ const deleteOrder = catchAsyncError(async (req, res, next) => {
 });
 
 module.exports = {
-  createOrder,
   myOrders,
   getSingleOrder,
   getAllOrders,
   updateOrder,
   deleteOrder,
+  createOrder,
 };
