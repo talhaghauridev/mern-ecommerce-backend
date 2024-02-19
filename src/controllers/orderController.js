@@ -11,14 +11,12 @@ const createOrder = async (customer, data) => {
   console.log("shippingInfo Items", shippingInfo);
 
   const orderItems = Items?.map((item) => ({
-    product: item._id,
+    product: item.product,
     name: item.name,
     price: item.price,
-    image:
-      item.images[0]?.url ||
-      "https://res.cloudinary.com/datkbb6pe/image/upload/v1698064367/avatar/bk7uohfge0ahhlwyzto6.png",
+    image: item.image,
     stock: item.stock,
-    quantity: item.quantity || 1,
+    quantity: item.quantity,
   }));
 
   try {
@@ -92,7 +90,6 @@ async function updateStock(id, quantity) {
   const product = await Product.findById(id);
   product.stock -= quantity;
   await product.save({ validateBeforeSave: false });
-  console.log(product);
 }
 const updateOrder = catchAsyncError(async (req, res, next) => {
   const order = await Order.findById(req.params.id);

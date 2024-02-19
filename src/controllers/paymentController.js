@@ -10,13 +10,24 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const checkPayment = catchAsyncError(async (req, res, next) => {
   try {
     const { items, userId, shippingInfo } = req.body;
+
+    const cartItems = items.map((item) => ({
+      product: item._id,
+      name: item.name,
+      price: item.price,
+      image: item?.images[0]?.url ? item?.images[0]?.url : "hello",
+      stock: item.stock,
+      quantity: item.quantity || 1,
+    }));
+
     const customer = await stripe.customers.create({
       metadata: {
         userId: userId,
-        cart: JSON.stringify(items),
+        cart: JSON.stringify(cartItems),
         shippingInfo: JSON.stringify(shippingInfo),
       },
     });
+
     const lineItems = items?.map((item) => ({
       price_data: {
         currency: "inr",
