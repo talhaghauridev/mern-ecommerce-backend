@@ -76,19 +76,24 @@ const updateProduct = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Product not found", 404));
   }
 
-  // Filter out images that already exist in the product's images
   const existingImages = req.body.images.filter(
     (newImage) =>
       !product.images.some(
-        (existingImage) => existingImage?.public_Id === newImage?.public_Id
+        (existingImage) => existingImage.url === newImage || newImage?.url
       )
   );
 
-  console.log(existingImages);
-  let images = [];
+  const prevImages = product.images.filter((newImage) =>
+    product.images.some(
+      (existingImage) => existingImage.url === newImage || newImage?.url
+    )
+  );
+
+  // const im =
 
   try {
-    // Upload only new images to Cloudinary
+    let images = [];
+
     for (const image of existingImages) {
       const uploadedImage = await uploadCloudinary(image, "products");
       images.push({
@@ -97,19 +102,23 @@ const updateProduct = catchAsyncError(async (req, res, next) => {
       });
     }
 
-    // Combine existing product images with newly uploaded images
-    const updatedImages = [...product.images, ...images];
+    const updatedImages = [...images, ...prevImages];
     req.body.images = updatedImages;
 
-    await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-      useFindAndModify: false,
-    });
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body },
+      {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false,
+      }
+    );
 
     res.status(200).json({
       success: true,
       message: "Product update successful",
+      data: updatedProduct,
     });
   } catch (error) {
     console.error("Error uploading images to Cloudinary:", error);

@@ -3,6 +3,22 @@ const Order = require("../models/orderModal");
 const Product = require("../models/productModel");
 const ErrorHandler = require("../utils/errorhandler");
 
+
+// Order Items
+const orderItemsFixed = (orders)=>{
+  return orders.map((order) => ({
+    ...order.toObject(),
+    orderItems: order.orderItems.map(({ product, name, price, quantity }) => ({
+      name,
+      price,
+      quantity,
+      image: product?.images[0]?.url || null,
+    })),
+  }));
+
+}
+
+//Create Order 
 const createOrder = async (customer, data) => {
   const Items = JSON.parse(customer.metadata.cart);
   const shippingInfo = JSON.parse(customer.metadata.shippingInfo);
@@ -14,7 +30,6 @@ const createOrder = async (customer, data) => {
     product: item.product,
     name: item.name,
     price: item.price,
-    image: item.image,
     stock: item.stock,
     quantity: item.quantity,
   }));
@@ -44,43 +59,59 @@ const createOrder = async (customer, data) => {
 };
 
 // Get My Orders
-
 const myOrders = catchAsyncError(async (req, res, next) => {
-  const orders = await Order.find({ user: req.user._id });
-  console.log(orders);
+  const orders = await Order.find({ user: req.user._id }).populate({
+    path: "orderItems.product",
+    select: "images",
+  });
+
+   const orderItems= orderItemsFixed(orders)
+
   res.status(201).json({
     success: true,
-    orders,
+    orders: orderItems,
   });
 });
 
 //Get Single Order --Admin
 
 const getSingleOrder = catchAsyncError(async (req, res, next) => {
-  const order = await Order.findById(req.params.id);
+  const order = await Order.findById(req.params.id).populate({
+    path: "orderItems.product",
+    select: "images",
+  });;
 
   if (!order) {
     return next(new ErrorHandler("Product not found in this id ", 404));
   }
+  const orderItems= orderItemsFixed([order])
+
+
   res.status(201).json({
     success: true,
-    order,
+    order:orderItems[0],
   });
 });
 
 //Get All Orders --Admin
 
 const getAllOrders = catchAsyncError(async (req, res, next) => {
-  const orders = await Order.find();
+  const orders = await Order.find().populate({
+    path: "orderItems.product",
+    select: "images",
+  });;
   let totalAmount = 0;
   orders.forEach((order) => {
     totalAmount += order.totalPrice;
   });
 
+  const orderItems= orderItemsFixed(orders)
+
+
   res.status(200).json({
     success: true,
     totalAmount,
-    orders,
+    orders:orderItems,
     length: orders?.length,
   });
 });

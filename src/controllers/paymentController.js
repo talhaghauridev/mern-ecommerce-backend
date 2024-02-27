@@ -15,7 +15,6 @@ const checkPayment = catchAsyncError(async (req, res, next) => {
       product: item._id,
       name: item.name,
       price: item.price,
-      image: item?.images[0]?.url ? item?.images[0]?.url : "hello",
       stock: item.stock,
       quantity: item.quantity || 1,
     }));
