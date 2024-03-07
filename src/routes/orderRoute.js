@@ -9,7 +9,6 @@ const {
 const { isAuthenticationUser, authorizeRoles } = require("../middlewares/auth");
 
 const router = express.Router();
-("");
 router.route("/order/:id").get(isAuthenticationUser, getSingleOrder);
 router.route("/orders/me").get(isAuthenticationUser, myOrders);
 
