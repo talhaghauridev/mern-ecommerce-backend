@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "format:check": "prettier . --check",
+    "format:fix": "prettier --write ."
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -25,5 +27,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
 }

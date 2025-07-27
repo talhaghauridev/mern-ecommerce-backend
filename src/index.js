@@ -12,26 +12,26 @@ dotenv.config({ path: "./.env" });
 
 let server;
 connectDB().then(() => {
-  server = app.listen(PORT, () => {
-    console.log(`Server is working is http://localhost:${PORT}`);
-  });
+   server = app.listen(PORT, () => {
+      console.log(`Server is working is http://localhost:${PORT}`);
+   });
 });
 
 app.get("/", (req, res, next) => {
-  res.json({
-    success: true,
-    message: "Server is running",
-  });
+   res.json({
+      success: true,
+      message: "Server is running"
+   });
 });
 
 cloudinary.config(cloudinaryConfig);
 
 process.on("unhandledRejection", (err) => {
-  console.log(`Error ${err.message}`);
-  console.log(`Sutting down the server due to Unhandel Promise Rejection`);
-  server.close(() => {
-    process.exit(1);
-  });
+   console.log(`Error ${err.message}`);
+   console.log(`Sutting down the server due to Unhandel Promise Rejection`);
+   server.close(() => {
+      process.exit(1);
+   });
 });
 
 module.exports = app;

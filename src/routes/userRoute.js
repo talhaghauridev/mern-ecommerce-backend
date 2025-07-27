@@ -1,17 +1,17 @@
 const express = require("express");
 const {
-  registerUser,
-  loginUser,
-  logoutUser,
-  forgotPassword,
-  resetPassword,
-  getUserDetials,
-  getSingleUser,
-  getAllUsers,
-  updateProfile,
-  updateUserPassword,
-  updateUserRole,
-  deleteUser
+   registerUser,
+   loginUser,
+   logoutUser,
+   forgotPassword,
+   resetPassword,
+   getUserDetials,
+   getSingleUser,
+   getAllUsers,
+   updateProfile,
+   updateUserPassword,
+   updateUserRole,
+   deleteUser
 } = require("../controllers/userController");
 const { isAuthenticationUser, authorizeRoles } = require("../middlewares/auth");
 
@@ -29,13 +29,11 @@ router.route("/logout").get(logoutUser);
 router.route("/me").get(isAuthenticationUser, getUserDetials);
 router.route("/password/update").put(isAuthenticationUser, updateUserPassword);
 router.route("/me/update").put(isAuthenticationUser, updateProfile);
+router.route("/admin/users").get(isAuthenticationUser, authorizeRoles("admin"), getAllUsers);
 router
-  .route("/admin/users")
-  .get(isAuthenticationUser, authorizeRoles("admin"), getAllUsers);
-router
-  .route("/admin/user/:id")
-  .get(isAuthenticationUser, authorizeRoles("admin"), getSingleUser)
-  .patch(isAuthenticationUser, authorizeRoles("admin"), updateUserRole)
-  .delete(isAuthenticationUser, authorizeRoles("admin"), deleteUser);
+   .route("/admin/user/:id")
+   .get(isAuthenticationUser, authorizeRoles("admin"), getSingleUser)
+   .patch(isAuthenticationUser, authorizeRoles("admin"), updateUserRole)
+   .delete(isAuthenticationUser, authorizeRoles("admin"), deleteUser);
 
 module.exports = router;
