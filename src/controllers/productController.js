@@ -4,6 +4,8 @@ import ApiFeature from "../utils/apifeature.js";
 import catchAsyncError from "../utils/catchAsyncError.js";
 import { uploadCloudinary } from "../utils/cloudinary.js";
 import ErrorHandler from "../utils/errorhandler.js";
+import cacheManager from "../utils/cacheManager.js";
+import { CACHE_KEYS, CACHE_TTL } from "../constants.js";
 
 // Get All Product
 
@@ -25,15 +27,29 @@ const getAllProducts = catchAsyncError(async (req, res) => {
    });
 });
 
-//Get Product Detial
+//Get Product Detail
 
 const getProductDetial = catchAsyncError(async (req, res, next) => {
    const productId = req.params.id;
+
+   // Try to get from cache
+   const cachedProduct = cacheManager.get(CACHE_KEYS.PRODUCT_DETAIL(productId));
+   if (cachedProduct) {
+      return res.status(200).json({
+         success: true,
+         product: cachedProduct
+      });
+   }
+
    const product = await Product.findById(productId);
 
    if (!product) {
       return next(new ErrorHandler("Product not found", 404));
    }
+
+   // Cache the product for 10 minutes
+   cacheManager.set(CACHE_KEYS.PRODUCT_DETAIL(productId), product, CACHE_TTL.MEDIUM);
+
    res.status(200).json({
       success: true,
       product
@@ -72,6 +88,10 @@ const updateProduct = catchAsyncError(async (req, res, next) => {
    if (!product) {
       return next(new ErrorHandler("Product not found", 404));
    }
+
+   // Invalidate product caches when updating
+   cacheManager.del(CACHE_KEYS.PRODUCT_DETAIL(req.params.id));
+   cacheManager.del(CACHE_KEYS.ADMIN_PRODUCTS);
 
    const existingImages = req.body.images.filter(
       (newImage) => !product.images.some((existingImage) => existingImage.url === newImage || newImage?.url)
@@ -126,6 +146,11 @@ const deleteProduct = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("Product not found", 404));
    }
 
+   // Invalidate all related caches when deleting a product
+   cacheManager.del(CACHE_KEYS.PRODUCT_DETAIL(id));
+   cacheManager.del(CACHE_KEYS.PRODUCT_REVIEWS(id));
+   cacheManager.del(CACHE_KEYS.ADMIN_PRODUCTS);
+
    for (const image of product.images) {
       await v2.uploader.destroy(image.public_Id);
    }
@@ -141,7 +166,20 @@ const deleteProduct = catchAsyncError(async (req, res, next) => {
 //Get Admin Products -- Admin
 
 const getAdminProducts = catchAsyncError(async (req, res) => {
+   // Try to get from cache
+   const cachedProducts = cacheManager.get(CACHE_KEYS.ADMIN_PRODUCTS);
+   if (cachedProducts) {
+      return res.status(200).json({
+         success: true,
+         products: cachedProducts
+      });
+   }
+
    const products = await Product.find();
+
+   // Cache for 5 minutes as admin data might change more frequently
+   cacheManager.set(CACHE_KEYS.ADMIN_PRODUCTS, products, CACHE_TTL.SHORT);
+
    res.status(200).json({
       success: true,
       products
@@ -161,6 +199,10 @@ const productReview = catchAsyncError(async (req, res, next) => {
       rating: Number(rating),
       comment
    };
+
+   // Invalidate related caches when a review is added/updated
+   cacheManager.del(CACHE_KEYS.PRODUCT_DETAIL(productId));
+   cacheManager.del(CACHE_KEYS.PRODUCT_REVIEWS(productId));
 
    const product = await Product.findById(productId);
 

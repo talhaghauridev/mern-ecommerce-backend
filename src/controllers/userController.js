@@ -6,6 +6,8 @@ import catchAsyncError from "../utils/catchAsyncError.js";
 import { uploadCloudinary, uploadUpdateCloudinary } from "../utils/cloudinary.js";
 import ErrorHandler from "../utils/errorhandler.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import cacheManager from "../utils/cacheManager.js";
+import { CACHE_KEYS, CACHE_TTL } from "../constants.js";
 
 // Register a User
 const registerUser = catchAsyncError(async (req, res, next) => {
@@ -169,10 +171,23 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
    }
 });
 
-//Get User Detial
+//Get User Detail
 
 const getUserDetials = catchAsyncError(async (req, res, next) => {
+   // Try to get from cache first
+   const cachedUser = cacheManager.get(CACHE_KEYS.USER_DETAIL(req.user._id));
+   if (cachedUser) {
+      return res.status(200).json({
+         success: true,
+         user: cachedUser
+      });
+   }
+
    const user = await User.findById(req.user._id);
+
+   // Cache for 10 minutes
+   cacheManager.set(CACHE_KEYS.USER_DETAIL(req.user._id), user, CACHE_TTL.MEDIUM);
+
    res.status(200).json({
       success: true,
       user
@@ -238,6 +253,10 @@ const updateProfile = catchAsyncError(async (req, res, next) => {
       new: true
    });
 
+   // Invalidate user cache
+   cacheManager.del(CACHE_KEYS.USER_DETAIL(req.user._id));
+   cacheManager.del(CACHE_KEYS.USER_PROFILE(req.user._id));
+
    res.status(200).json({
       success: true,
       message: "User updated successfully"
@@ -246,7 +265,19 @@ const updateProfile = catchAsyncError(async (req, res, next) => {
 
 //Get all Users --Admin
 const getAllUsers = catchAsyncError(async (req, res, next) => {
+   // Try to get from cache first
+   const cachedUsers = cacheManager.get("users:all");
+   if (cachedUsers) {
+      return res.status(200).json({
+         success: true,
+         users: cachedUsers
+      });
+   }
+
    const users = await User.find();
+
+   // Cache for 5 minutes (shorter time as it's admin data)
+   cacheManager.set("users:all", users, CACHE_TTL.SHORT);
 
    res.status(200).json({
       success: true,
@@ -257,11 +288,24 @@ const getAllUsers = catchAsyncError(async (req, res, next) => {
 //Get Single User --Admin
 
 const getSingleUser = catchAsyncError(async (req, res, next) => {
+   // Try to get from cache first
+   const cachedUser = cacheManager.get(CACHE_KEYS.USER_DETAIL(req.params.id));
+   if (cachedUser) {
+      return res.status(200).json({
+         success: true,
+         user: cachedUser
+      });
+   }
+
    const user = await User.findById(req.params.id);
 
    if (!user) {
       return next(new ErrorHandler(`User does not exit with id:${req.params.id}`));
    }
+
+   // Cache for 10 minutes
+   cacheManager.set(CACHE_KEYS.USER_DETAIL(req.params.id), user, CACHE_TTL.MEDIUM);
+
    res.status(200).json({
       success: true,
       user
@@ -281,12 +325,15 @@ const updateUserRole = catchAsyncError(async (req, res, next) => {
 
    const user = await User.findByIdAndUpdate(
       req.params.id,
-
       { $set: newUserData },
       {
          new: true
       }
    );
+
+   // Invalidate user caches
+   cacheManager.del(CACHE_KEYS.USER_DETAIL(req.params.id));
+   cacheManager.del(CACHE_KEYS.USER_PROFILE(req.params.id));
 
    res.status(200).json({
       success: true,
@@ -306,6 +353,10 @@ const deleteUser = catchAsyncError(async (req, res, next) => {
    await cloudinary.v2.uploader.destroy(user?.avatar?.public_id);
 
    await User.findByIdAndDelete(user?._id);
+
+   // Invalidate all user related caches
+   cacheManager.del(CACHE_KEYS.USER_DETAIL(req.params.id));
+   cacheManager.del(CACHE_KEYS.USER_PROFILE(req.params.id));
 
    res.status(200).json({
       success: true

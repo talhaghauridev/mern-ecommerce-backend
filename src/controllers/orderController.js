@@ -2,6 +2,8 @@ import catchAsyncError from "../utils/catchAsyncError.js";
 import Order from "../models/orderModal.js";
 import Product from "../models/productModel.js";
 import ErrorHandler from "../utils/errorhandler.js";
+import cacheManager from "../utils/cacheManager.js";
+import { CACHE_KEYS, CACHE_TTL } from "../constants.js";
 
 // Order Items
 const orderItemsFixed = (orders) => {
@@ -58,12 +60,25 @@ const createOrder = async (customer, data) => {
 
 // Get My Orders
 const myOrders = catchAsyncError(async (req, res, next) => {
+   // Try to get from cache first
+   const cacheKey = CACHE_KEYS.USER_ORDERS(req.user._id);
+   const cachedOrderItems = cacheManager.get(cacheKey);
+   if (cachedOrderItems) {
+      return res.status(201).json({
+         success: true,
+         orders: cachedOrderItems
+      });
+   }
+
    const orders = await Order.find({ user: req.user._id }).populate({
       path: "orderItems.product",
       select: "images"
    });
 
    const orderItems = orderItemsFixed(orders);
+
+   // Cache only the processed order items
+   cacheManager.set(cacheKey, orderItems, CACHE_TTL.SHORT);
 
    res.status(201).json({
       success: true,
@@ -74,6 +89,15 @@ const myOrders = catchAsyncError(async (req, res, next) => {
 //Get Single Order --Admin
 
 const getSingleOrder = catchAsyncError(async (req, res, next) => {
+   // Try to get from cache first
+   const cachedOrderData = cacheManager.get(CACHE_KEYS.ORDER_DETAIL(req.params.id));
+   if (cachedOrderData) {
+      return res.status(201).json({
+         success: true,
+         order: cachedOrderData
+      });
+   }
+
    const order = await Order.findById(req.params.id).populate({
       path: "orderItems.product",
       select: "images"
@@ -82,17 +106,34 @@ const getSingleOrder = catchAsyncError(async (req, res, next) => {
    if (!order) {
       return next(new ErrorHandler("Product not found in this id ", 404));
    }
-   const orderItems = orderItemsFixed([order]);
+   
+   // Process order data before caching
+   const orderData = orderItemsFixed([order])[0];
+   
+   // Cache only the essential order data
+   cacheManager.set(CACHE_KEYS.ORDER_DETAIL(req.params.id), orderData, CACHE_TTL.MEDIUM);
 
    res.status(201).json({
       success: true,
-      order: orderItems[0]
+      order: orderData
    });
 });
 
 //Get All Orders --Admin
 
 const getAllOrders = catchAsyncError(async (req, res, next) => {
+   // Try to get from cache first
+   const cachedData = cacheManager.get(CACHE_KEYS.ALL_ORDERS);
+   if (cachedData) {
+      const { orders, totalAmount } = cachedData;
+      return res.status(200).json({
+         success: true,
+         totalAmount,
+         orders,
+         length: orders.length
+      });
+   }
+
    const orders = await Order.find().populate({
       path: "orderItems.product",
       select: "images"
@@ -104,11 +145,17 @@ const getAllOrders = catchAsyncError(async (req, res, next) => {
 
    const orderItems = orderItemsFixed(orders);
 
+   // Cache only essential data
+   cacheManager.set(CACHE_KEYS.ALL_ORDERS, {
+      orders: orderItems,
+      totalAmount
+   }, CACHE_TTL.SHORT);
+
    res.status(200).json({
       success: true,
       totalAmount,
       orders: orderItems,
-      length: orders?.length
+      length: orders.length
    });
 });
 
@@ -137,6 +184,11 @@ const updateOrder = catchAsyncError(async (req, res, next) => {
 
    await order.save({ validateBeforeSave: false });
 
+   // Invalidate the order cache since status changed
+   cacheManager.del(CACHE_KEYS.ORDER_DETAIL(req.params.id));
+   // Also invalidate orders list cache since this would affect it
+   cacheManager.delByPattern(CACHE_KEYS.ORDERS_PATTERN);
+
    res.status(200).json({
       success: true,
       message: "Order updated successfully"
@@ -150,7 +202,16 @@ const deleteOrder = catchAsyncError(async (req, res, next) => {
    if (!order) {
       return next(new ErrorHandler(" You have already dilvered this order", 404));
    }
+
+   // Get the user ID before deleting the order
+   const userId = order.user;
+
    await order.deleteOne(order);
+
+   // Invalidate all related caches
+   cacheManager.del(CACHE_KEYS.ORDER_DETAIL(req.params.id));
+   cacheManager.del(CACHE_KEYS.USER_ORDERS(userId));
+   cacheManager.delByPattern(CACHE_KEYS.ORDERS_PATTERN);
 
    res.status(200).json({
       success: true,
