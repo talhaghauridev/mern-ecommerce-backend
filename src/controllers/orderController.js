@@ -122,45 +122,52 @@ const getSingleOrder = catchAsyncError(async (req, res, next) => {
 //Get All Orders --Admin
 
 const getAllOrders = catchAsyncError(async (req, res, next) => {
-   // Try to get from cache first
-   const cachedData = cacheManager.get(CACHE_KEYS.ALL_ORDERS);
-   if (cachedData) {
-      const { orders, totalAmount } = cachedData;
-      return res.status(200).json({
+   try {
+      // Try to get from cache first
+      const cachedData = cacheManager.get(CACHE_KEYS.ADMIN_ORDERS);
+      if (cachedData) {
+         const { orders, totalAmount } = cachedData;
+         return res.status(200).json({
+            success: true,
+            totalAmount,
+            orders,
+            length: orders.length
+         });
+      }
+
+      const orders = await Order.find().populate({
+         path: "orderItems.product",
+         select: "images"
+      });
+      let totalAmount = 0;
+      orders.forEach((order) => {
+         totalAmount += order.totalPrice;
+      });
+
+      const orderItems = orderItemsFixed(orders);
+
+      // Cache only essential data
+      cacheManager.set(
+         CACHE_KEYS.ADMIN_ORDERS,
+         {
+            orders: orderItems,
+            totalAmount
+         },
+         CACHE_TTL.SHORT
+      );
+
+      res.status(200).json({
          success: true,
          totalAmount,
-         orders,
+         orders: orderItems,
          length: orders.length
       });
+   } catch (error) {
+      console.log("Error fetching all orders:", error);
+      res.status(400).json({
+         message: error.message
+      });
    }
-
-   const orders = await Order.find().populate({
-      path: "orderItems.product",
-      select: "images"
-   });
-   let totalAmount = 0;
-   orders.forEach((order) => {
-      totalAmount += order.totalPrice;
-   });
-
-   const orderItems = orderItemsFixed(orders);
-
-   // Cache only essential data
-   cacheManager.set(
-      CACHE_KEYS.ALL_ORDERS,
-      {
-         orders: orderItems,
-         totalAmount
-      },
-      CACHE_TTL.SHORT
-   );
-
-   res.status(200).json({
-      success: true,
-      totalAmount,
-      orders: orderItems,
-      length: orders.length
-   });
 });
 
 // Update Order Status --Admin

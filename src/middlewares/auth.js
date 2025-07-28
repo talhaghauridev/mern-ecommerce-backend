@@ -26,6 +26,7 @@ export const isAuthenticationUser = catchAsyncError(async (req, res, next) => {
       const cachedUser = cacheManager.get(CACHE_KEYS.USER_DETAIL(decodeData.id));
 
       if (cachedUser) {
+         console.log("User found in cache:", cachedUser);
          req.user = cachedUser;
          return next();
       }
@@ -38,9 +39,10 @@ export const isAuthenticationUser = catchAsyncError(async (req, res, next) => {
 
       cacheManager.set(CACHE_KEYS.USER_DETAIL(decodeData.id), user, CACHE_TTL.MEDIUM);
 
-      req.user = userData;
+      req.user = user;
       next();
    } catch (error) {
+      console.error("JWT verification failed:", error);
       return next(new ErrorHandler("Invalid token. Please log in again.", 401));
    }
 });
