@@ -11,7 +11,9 @@ import order from "./routes/orderRoute.js";
 import payment from "./routes/paymentRoute.js";
 import product from "./routes/productRoute.js";
 import user from "./routes/userRoute.js";
+
 dotenv.config({ path: "./.env" });
+
 const app = express();
 app.use(cors(corsConfig));
 app.use(bodyParser.urlencoded({ extended: false }));

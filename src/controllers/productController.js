@@ -1,11 +1,11 @@
 import { v2 } from "cloudinary";
 import Product from "../models/productModel.js";
-import ApiFeature from "../utils/apifeature.js";
 import catchAsyncError from "../utils/catchAsyncError.js";
 import { uploadCloudinary } from "../utils/cloudinary.js";
 import ErrorHandler from "../utils/errorhandler.js";
 import cacheManager from "../utils/cacheManager.js";
 import { CACHE_KEYS, CACHE_TTL } from "../constants.js";
+import ApiFeature from "./../utils/apifeature.js";
 
 // Get All Product
 

@@ -106,10 +106,10 @@ const getSingleOrder = catchAsyncError(async (req, res, next) => {
    if (!order) {
       return next(new ErrorHandler("Product not found in this id ", 404));
    }
-   
+
    // Process order data before caching
    const orderData = orderItemsFixed([order])[0];
-   
+
    // Cache only the essential order data
    cacheManager.set(CACHE_KEYS.ORDER_DETAIL(req.params.id), orderData, CACHE_TTL.MEDIUM);
 
@@ -146,10 +146,14 @@ const getAllOrders = catchAsyncError(async (req, res, next) => {
    const orderItems = orderItemsFixed(orders);
 
    // Cache only essential data
-   cacheManager.set(CACHE_KEYS.ALL_ORDERS, {
-      orders: orderItems,
-      totalAmount
-   }, CACHE_TTL.SHORT);
+   cacheManager.set(
+      CACHE_KEYS.ALL_ORDERS,
+      {
+         orders: orderItems,
+         totalAmount
+      },
+      CACHE_TTL.SHORT
+   );
 
    res.status(200).json({
       success: true,

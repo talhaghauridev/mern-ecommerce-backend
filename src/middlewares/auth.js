@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import ErrorHandler from "../utils/errorhandler.js";
 import catchAsyncError from "../utils/catchAsyncError.js";
 import User from "../models/userModel.js";
+import cacheManager from "../utils/cacheManager.js";
+import { CACHE_KEYS, CACHE_TTL } from "../constants.js";
 
 export const isAuthenticationUser = catchAsyncError(async (req, res, next) => {
    const authorizationHeader = req.headers.authorization;
@@ -19,7 +21,24 @@ export const isAuthenticationUser = catchAsyncError(async (req, res, next) => {
 
    try {
       const decodeData = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decodeData.id);
+
+      // Try to get user from cache first
+      const cachedUser = cacheManager.get(CACHE_KEYS.USER_DETAIL(decodeData.id));
+
+      if (cachedUser) {
+         req.user = cachedUser;
+         return next();
+      }
+
+      // If not in cache, get from database
+      const user = await User.findById(decodeData.id).select("-password -resetPasswordToken -resetPasswordExpire");
+      if (!user) {
+         return next(new ErrorHandler("User not found", 401));
+      }
+
+      cacheManager.set(CACHE_KEYS.USER_DETAIL(decodeData.id), user, CACHE_TTL.MEDIUM);
+
+      req.user = userData;
       next();
    } catch (error) {
       return next(new ErrorHandler("Invalid token. Please log in again.", 401));

@@ -21,6 +21,7 @@
       "express-fileupload": "^1.4.0",
       "jsonwebtoken": "^9.0.1",
       "mongoose": "^7.4.3",
+      "node-cache": "^5.1.2",
       "nodemailer": "^6.9.4",
       "nodemon": "^3.0.1",
       "stripe": "^14.16.0",
