@@ -1,5 +1,5 @@
-const ErrorHandler = require("./errorhandler");
-const { v2 } = require("cloudinary");
+import ErrorHandler from "./errorhandler.js";
+import { v2 } from "cloudinary";
 
 const uploadCloudinary = async (file, folder) => {
    try {
@@ -38,7 +38,4 @@ const uploadUpdateCloudinary = async (public_id, file, folder) => {
    }
 };
 
-module.exports = {
-   uploadCloudinary,
-   uploadUpdateCloudinary
-};
+export { uploadCloudinary, uploadUpdateCloudinary };

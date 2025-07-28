@@ -1,9 +1,9 @@
-const jwt = require("jsonwebtoken");
-const ErrorHandler = require("../utils/errorhandler");
-const catchAsyncError = require("../utils/catchAsyncError");
-const User = require("../models/userModel");
+import jwt from "jsonwebtoken";
+import ErrorHandler from "../utils/errorhandler.js";
+import catchAsyncError from "../utils/catchAsyncError.js";
+import User from "../models/userModel.js";
 
-exports.isAuthenticationUser = catchAsyncError(async (req, res, next) => {
+export const isAuthenticationUser = catchAsyncError(async (req, res, next) => {
    const authorizationHeader = req.headers.authorization;
 
    if (!authorizationHeader) {
@@ -26,7 +26,7 @@ exports.isAuthenticationUser = catchAsyncError(async (req, res, next) => {
    }
 });
 
-exports.authorizeRoles = (...roles) => {
+export const authorizeRoles = (...roles) => {
    return (req, res, next) => {
       console.log(roles);
 

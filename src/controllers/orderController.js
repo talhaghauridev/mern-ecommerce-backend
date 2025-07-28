@@ -1,7 +1,7 @@
-const catchAsyncError = require("../utils/catchAsyncError");
-const Order = require("../models/orderModal");
-const Product = require("../models/productModel");
-const ErrorHandler = require("../utils/errorhandler");
+import catchAsyncError from "../utils/catchAsyncError.js";
+import Order from "../models/orderModal.js";
+import Product from "../models/productModel.js";
+import ErrorHandler from "../utils/errorhandler.js";
 
 // Order Items
 const orderItemsFixed = (orders) => {
@@ -158,11 +158,4 @@ const deleteOrder = catchAsyncError(async (req, res, next) => {
    });
 });
 
-module.exports = {
-   myOrders,
-   getSingleOrder,
-   getAllOrders,
-   updateOrder,
-   deleteOrder,
-   createOrder
-};
+export { myOrders, getSingleOrder, getAllOrders, updateOrder, deleteOrder, createOrder };

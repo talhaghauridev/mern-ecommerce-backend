@@ -1,15 +1,13 @@
-const catchAsyncError = require("../utils/catchAsyncError");
-const User = require("../models/userModel");
-const ErrorHandler = require("../utils/errorhandler");
-const sendToken = require("../utils/jwttoken");
-const cloudinary = require("cloudinary");
-const { sendEmail } = require("../utils/sendEmail");
-const crypto = require("crypto");
-const Product = require("../models/productModel");
-const { uploadUpdateCloudinary, uploadCloudinary } = require("../utils/cloudinary");
+import cloudinary from "cloudinary";
+import crypto from "crypto";
+import Product from "../models/productModel.js";
+import User from "../models/userModel.js";
+import catchAsyncError from "../utils/catchAsyncError.js";
+import { uploadCloudinary, uploadUpdateCloudinary } from "../utils/cloudinary.js";
+import ErrorHandler from "../utils/errorhandler.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 // Register a User
-
 const registerUser = catchAsyncError(async (req, res, next) => {
    const { name, email, password, avatar } = req.body;
 
@@ -314,17 +312,17 @@ const deleteUser = catchAsyncError(async (req, res, next) => {
    });
 });
 
-module.exports = {
-   registerUser,
+export {
+   deleteUser,
+   forgotPassword,
+   getAllUsers,
+   getSingleUser,
+   getUserDetials,
    loginUser,
    logoutUser,
-   forgotPassword,
+   registerUser,
    resetPassword,
-   getUserDetials,
-   getSingleUser,
-   getAllUsers,
    updateProfile,
    updateUserPassword,
-   updateUserRole,
-   deleteUser
+   updateUserRole
 };

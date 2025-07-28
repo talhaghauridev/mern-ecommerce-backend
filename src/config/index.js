@@ -15,4 +15,4 @@ const cloudinaryConfig = {
    api_secret: process.env.CLOUDINARY_API_SECRET
 };
 
-module.exports = { corsConfig, bodyParserConfig, cloudinaryConfig };
+export { corsConfig, bodyParserConfig, cloudinaryConfig };

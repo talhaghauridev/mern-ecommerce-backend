@@ -1,5 +1,5 @@
-const express = require("express");
-const {
+import express from "express";
+import {
    getAllProducts,
    createProduct,
    updateProduct,
@@ -9,8 +9,8 @@ const {
    getProductReviews,
    deleteReview,
    getAdminProducts
-} = require("../controllers/productController");
-const { isAuthenticationUser, authorizeRoles } = require("../middlewares/auth");
+} from "../controllers/productController.js";
+import { isAuthenticationUser, authorizeRoles } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -31,4 +31,4 @@ router
    .get(isAuthenticationUser, authorizeRoles("admin"), getProductReviews)
    .patch(isAuthenticationUser, authorizeRoles("admin"), deleteReview);
 
-module.exports = router;
+export default router;

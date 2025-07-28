@@ -1,9 +1,9 @@
-const dotenv = require("dotenv");
+import dotenv from "dotenv";
+import Stripe from "stripe";
+import catchAsyncError from "../utils/catchAsyncError.js";
+import ErrorHandler from "../utils/errorhandler.js";
+import { createOrder } from "./orderController.js";
 dotenv.config({ path: "./.env" });
-const catchAsyncError = require("../utils/catchAsyncError");
-const ErrorHandler = require("../utils/errorhandler");
-const Stripe = require("stripe");
-const { createOrder } = require("./orderController");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // CheckOut
@@ -90,7 +90,4 @@ const handleWebhook = async (req, res) => {
    }
 };
 
-module.exports = {
-   checkPayment,
-   handleWebhook
-};
+export { checkPayment, handleWebhook };

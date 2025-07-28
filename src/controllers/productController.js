@@ -1,9 +1,9 @@
-const catchAsyncError = require("../utils/catchAsyncError");
-const { ApiFeature } = require("../utils/apiFeature");
-const Product = require("../models/productModel");
-const ErrorHandler = require("../utils/errorhandler");
-const { uploadCloudinary } = require("../utils/cloudinary");
-const { v2 } = require("cloudinary");
+import { v2 } from "cloudinary";
+import Product from "../models/productModel.js";
+import ApiFeature from "../utils/apifeature.js";
+import catchAsyncError from "../utils/catchAsyncError.js";
+import { uploadCloudinary } from "../utils/cloudinary.js";
+import ErrorHandler from "../utils/errorhandler.js";
 
 // Get All Product
 
@@ -245,14 +245,14 @@ const deleteReview = catchAsyncError(async (req, res, next) => {
    });
 });
 
-module.exports = {
+export {
    createProduct,
-   updateProduct,
    deleteProduct,
+   deleteReview,
+   getAdminProducts,
    getAllProducts,
    getProductDetial,
-   productReview,
    getProductReviews,
-   deleteReview,
-   getAdminProducts
+   productReview,
+   updateProduct
 };

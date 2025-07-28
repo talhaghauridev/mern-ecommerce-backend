@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
-const validator = require("validator");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
+import mongoose from "mongoose";
+import validator from "validator";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
 const userSchema = new mongoose.Schema({
    name: {
       type: String,
@@ -79,4 +79,4 @@ userSchema.methods.getResetPasswordToken = async function () {
    return resetToken;
 };
 
-module.exports = mongoose.model("Users", userSchema);
+export default mongoose.model("Users", userSchema);

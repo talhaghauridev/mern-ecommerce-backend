@@ -1,8 +1,8 @@
-const app = require("./app");
-const dotenv = require("dotenv");
-const cloudinary = require("cloudinary");
-const connectDB = require("./db/index");
-const { cloudinaryConfig } = require("./config");
+import dotenv from "dotenv";
+import cloudinary from "cloudinary";
+import connectDB from "./db/index.js";
+import { cloudinaryConfig } from "./config/index.js";
+import app from "./app.js";
 const PORT = process.env.PORT || 5000;
 //Confing
 
@@ -34,4 +34,4 @@ process.on("unhandledRejection", (err) => {
    });
 });
 
-module.exports = app;
+export default app;
