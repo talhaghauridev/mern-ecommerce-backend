@@ -1,10 +1,10 @@
 import { v2 } from "cloudinary";
+import { CACHE_KEYS, CACHE_TTL } from "../constants.js";
 import Product from "../models/productModel.js";
+import cacheManager from "../utils/cacheManager.js";
 import catchAsyncError from "../utils/catchAsyncError.js";
 import { uploadCloudinary } from "../utils/cloudinary.js";
 import ErrorHandler from "../utils/errorhandler.js";
-import cacheManager from "../utils/cacheManager.js";
-import { CACHE_KEYS, CACHE_TTL } from "../constants.js";
 import ApiFeature from "./../utils/apifeature.js";
 
 // Get All Product
@@ -13,10 +13,10 @@ const getAllProducts = catchAsyncError(async (req, res) => {
    const resultPerPage = 8;
    const productCount = await Product.countDocuments();
 
-   const apifeature = new ApiFeature(Product.find(), req.query).search().filter().pagination(resultPerPage);
-   let products = await apifeature.query;
-
-   const filteredProductCount = products.length;
+   const apiFeature = new ApiFeature(Product.find(), req.query).search().filter();
+   const filteredProductCount = await apiFeature.query.clone().countDocuments();
+   apiFeature.pagination(resultPerPage);
+   let products = await apiFeature.query;
 
    res.status(200).json({
       message: "Route is working fine",
