@@ -93,27 +93,35 @@ const updateProduct = catchAsyncError(async (req, res, next) => {
    cacheManager.del(CACHE_KEYS.PRODUCT_DETAIL(req.params.id));
    cacheManager.del(CACHE_KEYS.ADMIN_PRODUCTS);
 
-   const existingImages = req.body.images.filter(
-      (newImage) => !product.images.some((existingImage) => existingImage.url === newImage || newImage?.url)
-   );
+   // Determine updated image URLs from request
+   const updatedImageUrls = Array.isArray(req.body.images)
+      ? req.body.images
+      : [req.body.images];
 
-   const prevImages = product.images.filter((newImage) => product.images.some((existingImage) => existingImage.url === newImage || newImage?.url));
+   // Remove images deleted by user
+   const imagesToRemove = product.images.filter(pi => !updatedImageUrls.includes(pi.url));
+   for (const img of imagesToRemove) {
+      await v2.uploader.destroy(img.public_Id);
+   }
 
-   // const im =
+   // Keep existing images
+   const keptImages = product.images.filter(pi => updatedImageUrls.includes(pi.url));
 
    try {
-      let images = [];
-
-      for (const image of existingImages) {
-         const uploadedImage = await uploadCloudinary(image, "products");
-         images.push({
-            public_Id: uploadedImage.public_id,
-            url: uploadedImage.secure_url
-         });
+      // Upload new images
+      const uploadedImages = [];
+      const existingUrls = product.images.map(pi => pi.url);
+      const toUpload = updatedImageUrls.filter(url => !existingUrls.includes(url));
+      for (const dataUrl of toUpload) {
+         const uploaded = await uploadCloudinary(dataUrl, "products");
+         uploadedImages.push({ public_Id: uploaded.public_id, url: uploaded.secure_url });
       }
 
-      const updatedImages = [...images, ...prevImages];
-      req.body.images = updatedImages;
+      // Final image array
+      const finalImages = [...uploadedImages,...keptImages];
+      req.body.images = finalImages;
+
+
 
       const updatedProduct = await Product.findByIdAndUpdate(
          req.params.id,

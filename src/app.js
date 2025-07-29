@@ -1,7 +1,6 @@
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
 import fileUpload from "express-fileupload";
 import { bodyParserConfig, corsConfig } from "./config/index.js";
@@ -14,9 +13,8 @@ import user from "./routes/userRoute.js";
 
 const app = express();
 app.use(cors(corsConfig));
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: false }));
 app.use(bodyParser.json(bodyParserConfig));
-app.use(express.json());
 app.use(cookieParser());
 app.use(fileUpload());
 

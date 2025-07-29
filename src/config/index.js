@@ -7,6 +7,7 @@ const corsConfig = {
 };
 
 const bodyParserConfig = {
+   limit: "50mb",
    verify: (req, res, buf) => {
       req.rawBody = buf;
    }
