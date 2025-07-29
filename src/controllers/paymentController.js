@@ -36,7 +36,7 @@ const checkPayment = catchAsyncError(async (req, res, next) => {
                   id: item._id
                }
             },
-            unit_amount: Number(item.price) * 100
+            unit_amount: Math.round(Number(item.price) * 100)
          },
          quantity: item.quantity
       }));

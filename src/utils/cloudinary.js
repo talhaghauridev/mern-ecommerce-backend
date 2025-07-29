@@ -24,8 +24,6 @@ const uploadCloudinary = async (file, folder) => {
 
       return response;
    } catch (error) {
-      console.log(error);
-
       throw new ErrorHandler(error, 400);
    }
 };
@@ -39,7 +37,6 @@ const uploadUpdateCloudinary = async (public_id, file, folder) => {
       }
       return response;
    } catch (error) {
-      console.log(error);
       throw new ErrorHandler(error, 400);
    }
 };

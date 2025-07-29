@@ -27,11 +27,7 @@ app.get("/", (req, res, next) => {
 cloudinary.config(cloudinaryConfig);
 
 process.on("unhandledRejection", (err) => {
-   console.log(`Error ${err.message}`);
-   console.log(`Sutting down the server due to Unhandel Promise Rejection`);
-   server.close(() => {
-      process.exit(1);
-   });
+   console.error(`Unhandled Rejection: ${err.message}`);
 });
 
 export default app;

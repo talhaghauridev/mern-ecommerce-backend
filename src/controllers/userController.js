@@ -160,7 +160,6 @@ const resetPassword = catchAsyncError(async (req, res, next) => {
          user: user
       });
    } catch (error) {
-      console.log(error);
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
       await user.save({

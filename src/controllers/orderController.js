@@ -13,7 +13,8 @@ const orderItemsFixed = (orders) => {
          name,
          price,
          quantity,
-         image: product?.images[0]?.url || null
+         image: product?.images[0]?.url || null,
+         _id: product?._id
       }))
    }));
 };
@@ -97,12 +98,10 @@ const getSingleOrder = catchAsyncError(async (req, res, next) => {
          order: cachedOrderData
       });
    }
-
    const order = await Order.findById(req.params.id).populate({
       path: "orderItems.product",
       select: "images"
    });
-
    if (!order) {
       return next(new ErrorHandler("Product not found in this id ", 404));
    }
@@ -163,7 +162,6 @@ const getAllOrders = catchAsyncError(async (req, res, next) => {
          length: orders.length
       });
    } catch (error) {
-      console.log("Error fetching all orders:", error);
       res.status(400).json({
          message: error.message
       });
@@ -172,38 +170,52 @@ const getAllOrders = catchAsyncError(async (req, res, next) => {
 
 // Update Order Status --Admin
 async function updateStock(id, quantity) {
+   if (!id) return;
    const product = await Product.findById(id);
-   product.stock -= quantity;
-   await product.save({ validateBeforeSave: false });
+   if (!product) {
+      console.warn(`Product not found for stock update, id: ${id}`);
+   }
+
+   if (product) {
+      product.stock -= quantity;
+      await product.save({ validateBeforeSave: false });
+   }
 }
 const updateOrder = catchAsyncError(async (req, res, next) => {
-   const order = await Order.findById(req.params.id);
-   if (!order) {
-      return next(new ErrorHandler(" You have already dilvered this order", 404));
+   try {
+      const order = await Order.findById(req.params.id);
+      if (!order) {
+         return next(new ErrorHandler(" You have already dilvered this order", 404));
+      }
+
+      if (order.orderStatus === "Delivered") {
+         return next(new ErrorHandler(" You have already dilvered this order", 404));
+      }
+      for (const o of order.orderItems) {
+         await updateStock(o.product, o.quantity);
+      }
+      order.orderStatus = req.body.status;
+      if (req.body.status === "Delivered") {
+         order.deliveredAt = Date.now();
+      }
+
+      await order.save({ validateBeforeSave: false });
+
+      // Invalidate the order cache since status changed
+      cacheManager.del(CACHE_KEYS.ORDER_DETAIL(req.params.id));
+      // Also invalidate orders list cache since this would affect it
+      cacheManager.delByPattern(CACHE_KEYS.ORDERS_PATTERN);
+
+      res.status(200).json({
+         success: true,
+         message: "Order updated successfully"
+      });
+   } catch (error) {
+      res.status(400).json({
+         success: false,
+         message: error
+      });
    }
-
-   if (order.orderStatus === "Delivered") {
-      return next(new ErrorHandler(" You have already dilvered this order", 404));
-   }
-   order.orderItems.forEach(async (o) => {
-      await updateStock(o.product, o.quantity);
-   });
-   order.orderStatus = req.body.status;
-   if (req.body.status === "Delivered") {
-      order.deliveredAt = Date.now();
-   }
-
-   await order.save({ validateBeforeSave: false });
-
-   // Invalidate the order cache since status changed
-   cacheManager.del(CACHE_KEYS.ORDER_DETAIL(req.params.id));
-   // Also invalidate orders list cache since this would affect it
-   cacheManager.delByPattern(CACHE_KEYS.ORDERS_PATTERN);
-
-   res.status(200).json({
-      success: true,
-      message: "Order updated successfully"
-   });
 });
 
 //Delete Order --Admin

@@ -26,12 +26,10 @@ export const isAuthenticationUser = catchAsyncError(async (req, res, next) => {
       const cachedUser = cacheManager.get(CACHE_KEYS.USER_DETAIL(decodeData.id));
 
       if (cachedUser) {
-         console.log("User found in cache:", cachedUser);
          req.user = cachedUser;
          return next();
       }
 
-      // If not in cache, get from database
       const user = await User.findById(decodeData.id).select("-password -resetPasswordToken -resetPasswordExpire");
       if (!user) {
          return next(new ErrorHandler("User not found", 401));
@@ -49,8 +47,6 @@ export const isAuthenticationUser = catchAsyncError(async (req, res, next) => {
 
 export const authorizeRoles = (...roles) => {
    return (req, res, next) => {
-      console.log(roles);
-
       if (!roles.includes(req.user.role)) {
          return next(new ErrorHandler(`Role:${req.user.role} is not allowed to access this resources`, 403));
       }

@@ -18,27 +18,21 @@ class ApiFeature {
    }
    filter() {
       const queryCopy = { ...this.queryStr };
-      console.log(queryCopy);
       //Romoving some field for category
       const romoveFields = ["keyword", "page", "limit"];
       romoveFields.forEach((key) => {
          delete queryCopy[key];
       });
 
-      //Filter For Price and Rating
-      console.log(queryCopy);
-
       let queryStr = JSON.stringify(queryCopy);
       queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (key) => `$${key}`);
 
       this.query = this.query.find(JSON.parse(queryStr));
-      console.log(queryStr);
       return this;
    }
    pagination(resultPerPage) {
       const currentPage = Number(this.queryStr.page) || 1;
       const skip = resultPerPage * (currentPage - 1);
-      console.log(skip);
       this.query = this.query.limit(resultPerPage).skip(skip);
       return this;
    }
