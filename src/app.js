@@ -13,7 +13,7 @@ import user from "./routes/userRoute.js";
 
 const app = express();
 app.use(cors(corsConfig));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: false }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: false }));
 app.use(bodyParser.json(bodyParserConfig));
 app.use(cookieParser());
 app.use(fileUpload());
